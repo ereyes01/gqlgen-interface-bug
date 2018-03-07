@@ -1,0 +1,22 @@
+schema {
+    query: Query
+}
+
+type Query {
+    shapes(): [Shape]
+}
+
+interface Shape {
+    area(): Float
+}
+
+type Circle implements Shape {
+    radius: Float
+    area() : Float
+}
+
+type Rectangle implements Shape {
+    length: Float
+    width: Float
+    area(): Float
+}

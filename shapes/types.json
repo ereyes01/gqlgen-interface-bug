@@ -1,0 +1,5 @@
+{
+    "Shape": "github.com/ereyes01/gqlgen-interface-bug/shapes.Shape",
+    "Circle": "github.com/ereyes01/gqlgen-interface-bug/shapes.Circle",
+    "Rectangle": "github.com/ereyes01/gqlgen-interface-bug/shapes.Rectangle"
+}
