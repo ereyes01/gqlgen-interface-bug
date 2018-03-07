@@ -1,5 +1,7 @@
 # `gqlgen` Interface Bug Reproduction
 
+This code reproduces the bug I discussed in vektah/gqlgen#42
+
 To reproduce:
 
 - Put this in your `$GOPATH`:
