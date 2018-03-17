@@ -21,6 +21,7 @@ func MakeExecutableSchema(resolvers Resolvers) graphql.ExecutableSchema {
 
 type Resolvers interface {
 	Query_shapes(ctx context.Context) ([]Shape, error)
+	Query_things(ctx context.Context) ([]Thing, error)
 }
 
 type executableSchema struct {
@@ -73,6 +74,8 @@ func (ec *executionContext) _Circle(sel []query.Selection, obj *Circle) graphql.
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Circle")
+		case "msg":
+			out.Values[i] = ec._Circle_msg(field, obj)
 		case "radius":
 			out.Values[i] = ec._Circle_radius(field, obj)
 		case "area":
@@ -83,6 +86,11 @@ func (ec *executionContext) _Circle(sel []query.Selection, obj *Circle) graphql.
 	}
 
 	return out
+}
+
+func (ec *executionContext) _Circle_msg(field graphql.CollectedField, obj *Circle) graphql.Marshaler {
+	res := obj.Msg
+	return graphql.MarshalString(res)
 }
 
 func (ec *executionContext) _Circle_radius(field graphql.CollectedField, obj *Circle) graphql.Marshaler {
@@ -109,6 +117,8 @@ func (ec *executionContext) _Query(sel []query.Selection) graphql.Marshaler {
 			out.Values[i] = graphql.MarshalString("Query")
 		case "shapes":
 			out.Values[i] = ec._Query_shapes(field)
+		case "things":
+			out.Values[i] = ec._Query_things(field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(field)
 		case "__type":
@@ -138,6 +148,28 @@ func (ec *executionContext) _Query_shapes(field graphql.CollectedField) graphql.
 		arr1 := graphql.Array{}
 		for idx1 := range res {
 			arr1 = append(arr1, func() graphql.Marshaler { return ec._Shape(field.Selections, &res[idx1]) }())
+		}
+		return arr1
+	})
+}
+
+func (ec *executionContext) _Query_things(field graphql.CollectedField) graphql.Marshaler {
+	return graphql.Defer(func() (ret graphql.Marshaler) {
+		defer func() {
+			if r := recover(); r != nil {
+				userErr := ec.recover(r)
+				ec.Error(userErr)
+				ret = graphql.Null
+			}
+		}()
+		res, err := ec.resolvers.Query_things(ec.ctx)
+		if err != nil {
+			ec.Error(err)
+			return graphql.Null
+		}
+		arr1 := graphql.Array{}
+		for idx1 := range res {
+			arr1 = append(arr1, func() graphql.Marshaler { return ec._Thing(field.Selections, &res[idx1]) }())
 		}
 		return arr1
 	})
@@ -181,6 +213,8 @@ func (ec *executionContext) _Rectangle(sel []query.Selection, obj *Rectangle) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Rectangle")
+		case "msg":
+			out.Values[i] = ec._Rectangle_msg(field, obj)
 		case "length":
 			out.Values[i] = ec._Rectangle_length(field, obj)
 		case "width":
@@ -193,6 +227,11 @@ func (ec *executionContext) _Rectangle(sel []query.Selection, obj *Rectangle) gr
 	}
 
 	return out
+}
+
+func (ec *executionContext) _Rectangle_msg(field graphql.CollectedField, obj *Rectangle) graphql.Marshaler {
+	res := obj.Msg
+	return graphql.MarshalString(res)
 }
 
 func (ec *executionContext) _Rectangle_length(field graphql.CollectedField, obj *Rectangle) graphql.Marshaler {
@@ -708,14 +747,8 @@ func (ec *executionContext) _Shape(sel []query.Selection, obj *Shape) graphql.Ma
 	switch obj := (*obj).(type) {
 	case nil:
 		return graphql.Null
-	case Circle:
-		return ec._Circle(sel, &obj)
-
 	case *Circle:
 		return ec._Circle(sel, obj)
-	case Rectangle:
-		return ec._Rectangle(sel, &obj)
-
 	case *Rectangle:
 		return ec._Rectangle(sel, obj)
 	default:
@@ -723,7 +756,24 @@ func (ec *executionContext) _Shape(sel []query.Selection, obj *Shape) graphql.Ma
 	}
 }
 
-var parsedSchema = schema.MustParse("schema {\n    query: Query\n}\n\ntype Query {\n    shapes(): [Shape]\n}\n\ninterface Shape {\n    area(): Float\n}\n\ntype Circle implements Shape {\n    radius: Float\n    area() : Float\n}\n\ntype Rectangle implements Shape {\n    length: Float\n    width: Float\n    area(): Float\n}\n")
+func (ec *executionContext) _Thing(sel []query.Selection, obj *Thing) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case Circle:
+		return ec._Circle(sel, &obj)
+	case *Circle:
+		return ec._Circle(sel, obj)
+	case Rectangle:
+		return ec._Rectangle(sel, &obj)
+	case *Rectangle:
+		return ec._Rectangle(sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+var parsedSchema = schema.MustParse("schema {\n    query: Query\n}\n\ntype Query {\n    shapes(): [Shape]\n    things(): [Thing]\n}\n\ninterface Shape {\n    area(): Float\n}\n\ntype Circle implements Shape {\n    msg: String!\n    radius: Float\n    area(): Float\n}\n\ntype Rectangle implements Shape {\n    msg: String!\n    length: Float\n    width: Float\n    area(): Float\n}\n\nunion Thing = Circle | Rectangle\n")
 
 func (ec *executionContext) introspectSchema() *introspection.Schema {
 	return introspection.WrapSchema(parsedSchema)

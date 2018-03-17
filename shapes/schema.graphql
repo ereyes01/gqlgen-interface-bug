@@ -4,6 +4,7 @@ schema {
 
 type Query {
     shapes(): [Shape]
+    things(): [Thing]
 }
 
 interface Shape {
@@ -11,12 +12,16 @@ interface Shape {
 }
 
 type Circle implements Shape {
+    msg: String!
     radius: Float
-    area() : Float
+    area(): Float
 }
 
 type Rectangle implements Shape {
+    msg: String!
     length: Float
     width: Float
     area(): Float
 }
+
+union Thing = Circle | Rectangle
